@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -166,12 +165,12 @@
 
             parkingSpots.forEach(spot => {
                 const li = document.createElement("li");
-                li.innerHTML = 
+                li.innerHTML = `
                     <span>Spot ${spot.id}: ${spot.owner} ${spot.tempOccupant ? "(Occupied by: " + spot.tempOccupant + ")" : ""}</span>
                     <button class="button ${spot.tempOccupant ? 'revert' : 'free'}" onclick="toggleSpot(${spot.id})">
                         ${spot.tempOccupant ? 'Revert' : 'Free'}
                     </button>
-                ;
+                `;
                 parkingListElement.appendChild(li);
             });
         }
@@ -182,10 +181,10 @@
 
             waitingList.forEach((name, index) => {
                 const li = document.createElement("li");
-                li.innerHTML = 
+                li.innerHTML = `
                     <span>${name}</span>
                     <button class="remove-btn" onclick="removeFromWaitingList(${index})">×</button>
-                ;
+                `;
                 waitingListElement.appendChild(li);
             });
 
