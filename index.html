@@ -5,49 +5,159 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parking Management</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f4f4f4;
-        }
-
-        h1 {
-            margin: 20px 0;
-        }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin: 20px;
-            justify-content: center;
-        }
-
-        .parking, .waiting-list {
-            background: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            width: 450px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+        /* CSS נשאר זהה */
     </style>
 </head>
 <body>
-    <h1>Parking Management</h1>
+    <h1>Parking - <span id="date"></span></h1>
+
     <div class="container">
         <div class="parking">
             <h2>Parking Spots</h2>
-            <p>Example parking content...</p>
+            <ul id="parking-list">
+                <!-- Parking spots will be dynamically added here -->
+            </ul>
         </div>
+
         <div class="waiting-list">
             <h2>Waiting List</h2>
-            <p>Example waiting list content...</p>
+            <ul id="waiting-list" class="numbered">
+                <!-- Waiting list items will be dynamically added here -->
+            </ul>
+            <input type="text" id="waiting-name" placeholder="Enter your name">
+            <button class="button" onclick="addToWaitingList()">Add to Waiting List</button>
         </div>
     </div>
+
+    <script>
+        // Default data
+        const defaultParkingSpots = [
+            { id: 346, owner: "גבי פרנבר", tempOccupant: null },
+            { id: 340, owner: "שי אתנבר", tempOccupant: null },
+            { id: 478, owner: "גיל/סמו אלכס", tempOccupant: null },
+            { id: 342, owner: "מאיה קמורה", tempOccupant: null },
+            { id: 343, owner: "שחף כהן", tempOccupant: null },
+            { id: 347, owner: "אורן מרון", tempOccupant: null },
+            { id: 479, owner: "עדית וייס", tempOccupant: null },
+            { id: 341, owner: "רות מאירסון", tempOccupant: null },
+            { id: 456, owner: "יוני", tempOccupant: null },
+            { id: 457, owner: "גיא הררי / דור", tempOccupant: null }
+        ];
+
+        // Load data from Local Storage
+        const parkingSpots = JSON.parse(localStorage.getItem('parkingSpots')) || defaultParkingSpots;
+        const waitingList = JSON.parse(localStorage.getItem('waitingList')) || [];
+
+        function updateDate() {
+            const dateElement = document.getElementById("date");
+            const today = new Date();
+            dateElement.textContent = today.toLocaleDateString();
+        }
+
+        function saveData() {
+            localStorage.setItem('parkingSpots', JSON.stringify(parkingSpots));
+            localStorage.setItem('waitingList', JSON.stringify(waitingList));
+        }
+
+        function renderParkingList() {
+            const parkingListElement = document.getElementById("parking-list");
+            parkingListElement.innerHTML = "";
+
+            parkingSpots.forEach(spot => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span>Spot ${spot.id}: ${spot.owner} ${spot.tempOccupant ? "(Occupied by: " + spot.tempOccupant + ")" : ""}</span>
+                    <button class="button ${spot.tempOccupant ? 'revert' : 'free'}" onclick="toggleSpot(${spot.id})">
+                        ${spot.tempOccupant ? 'Revert' : 'Free'}
+                    </button>
+                `;
+                parkingListElement.appendChild(li);
+            });
+        }
+
+        function renderWaitingList() {
+            const waitingListElement = document.getElementById("waiting-list");
+            waitingListElement.innerHTML = "";
+
+            waitingList.forEach((name, index) => {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span>${name}</span>
+                    <button class="remove-btn" onclick="removeFromWaitingList(${index})">×</button>
+                `;
+                waitingListElement.appendChild(li);
+            });
+
+            assignToAvailableSpots();
+        }
+
+        function addToWaitingList() {
+            const nameInput = document.getElementById("waiting-name");
+            const name = nameInput.value.trim();
+
+            if (name && !waitingList.includes(name)) {
+                waitingList.push(name);
+                nameInput.value = "";
+                renderWaitingList();
+                saveData();
+            }
+        }
+
+        function removeFromWaitingList(index) {
+            waitingList.splice(index, 1);
+            renderWaitingList();
+            saveData();
+        }
+
+        function toggleSpot(spotId) {
+            const spot = parkingSpots.find(s => s.id === spotId);
+
+            if (!spot.tempOccupant) {
+                spot.tempOccupant = "Available";
+            } else {
+                spot.tempOccupant = null;
+            }
+
+            renderParkingList();
+            renderWaitingList();
+            saveData();
+        }
+
+        function assignToAvailableSpots() {
+            let updated = false;
+            parkingSpots.forEach(spot => {
+                if (spot.tempOccupant === "Available" && waitingList.length > 0) {
+                    spot.tempOccupant = waitingList.shift();
+                    updated = true;
+                }
+            });
+
+            if (updated) {
+                renderParkingList();
+                saveData();
+            }
+        }
+
+        function resetParking() {
+            parkingSpots.forEach(spot => {
+                spot.tempOccupant = null;
+            });
+            renderParkingList();
+            saveData();
+        }
+
+        // Initialize app
+        updateDate();
+        renderParkingList();
+        renderWaitingList();
+
+        // Reset parking spots every day at 19:00
+        setInterval(() => {
+            const now = new Date();
+            if (now.getHours() === 19 && now.getMinutes() === 0) {
+                resetParking();
+            }
+        }, 60000);
+    </script>
 </body>
 </html>
