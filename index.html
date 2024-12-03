@@ -221,14 +221,17 @@
         }
 
         function assignToAvailableSpots() {
+            let updated = false;
             parkingSpots.forEach(spot => {
                 if (spot.tempOccupant === "Available" && waitingList.length > 0) {
                     spot.tempOccupant = waitingList.shift();
+                    updated = true;
                 }
             });
 
-            renderParkingList();
-            renderWaitingList();
+            if (updated) {
+                renderParkingList();
+            }
         }
 
         function resetParking() {
