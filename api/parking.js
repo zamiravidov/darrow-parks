@@ -1,23 +1,34 @@
 export default async function handler(req, res) {
-    // קבלת נתונים
-    if (req.method === 'GET') {
-        const data = await fetch('https://api.vercel.com/v1/edge-config/...', {
-            headers: {
-                Authorization: `Bearer ${process.env.EDGE_CONFIG_TOKEN}`
-            }
-        });
-        return res.json(await data.json());
-    }
+    // לקבל את המזהה של ה-Edge Config מהגדרות הסביבה
+    const edgeConfigId = process.env.EDGE_CONFIG;
+    const baseUrl = `https://edge-config.vercel.com/ecfg-${edgeConfigId}`;
     
-    // שמירת נתונים
-    if (req.method === 'POST') {
-        await fetch('https://api.vercel.com/v1/edge-config/...', {
-            method: 'PATCH',
-            headers: {
-                Authorization: `Bearer ${process.env.EDGE_CONFIG_TOKEN}`
-            },
-            body: JSON.stringify(req.body)
-        });
-        return res.json({ success: true });
+    try {
+        // GET request - קבלת נתונים
+        if (req.method === 'GET') {
+            const response = await fetch(`${baseUrl}/items/parking`, {
+                headers: {
+                    'Authorization': `Bearer ${process.env.EDGE_CONFIG_TOKEN}`
+                }
+            });
+            const data = await response.json();
+            return res.json(data || { parkingSpots: [], waitingList: [] });
+        }
+        
+        // POST request - שמירת נתונים
+        if (req.method === 'POST') {
+            await fetch(`${baseUrl}/items/parking`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${process.env.EDGE_CONFIG_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(req.body)
+            });
+            return res.json({ success: true });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
 }
