@@ -153,6 +153,42 @@
 
         const waitingList = [];
 
+              // פונקציות חדשות לתקשורת עם השרת
+async function saveChanges() {
+    try {
+        await fetch('/api/parking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                parkingSpots: parkingSpots,
+                waitingList: waitingList
+            })
+        });
+    } catch (error) {
+        console.error('שגיאה בשמירת הנתונים:', error);
+    }
+}
+
+async function loadData() {
+    try {
+        const response = await fetch('/api/parking');
+        const data = await response.json();
+        if (data.parkingSpots) {
+            parkingSpots.length = 0;
+            parkingSpots.push(...data.parkingSpots);
+        }
+        if (data.waitingList) {
+            waitingList.length = 0;
+            waitingList.push(...data.waitingList);
+        }
+        renderParkingList();
+        renderWaitingList();
+    } catch (error) {
+        console.error('שגיאה בטעינת הנתונים:', error);
+    }
+}
         function updateDate() {
             const dateElement = document.getElementById("date");
             const today = new Date();
@@ -204,12 +240,14 @@ function addToWaitingList() {
         waitingList.push(name);
         nameInput.value = "";
         renderWaitingList();
+         saveChanges(); 
     }
 }
 
         function removeFromWaitingList(index) {
             waitingList.splice(index, 1);
             renderWaitingList();
+             saveChanges(); 
         }
 
         function toggleSpot(spotId) {
@@ -223,6 +261,7 @@ function addToWaitingList() {
 
             renderParkingList();
             renderWaitingList();
+            saveChanges(); 
         }
 
         function assignToAvailableSpots() {
@@ -243,18 +282,21 @@ function addToWaitingList() {
             renderParkingList();
         }
 
-        // Initialize app
-        updateDate();
-        renderParkingList();
-        renderWaitingList();
+// Initialize app
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();  // טעינת נתונים מהשרת
+    updateDate();
+});
 
-        // Reset parking spots every day at 19:00
-        setInterval(() => {
-            const now = new Date();
-            if (now.getHours() === 19 && now.getMinutes() === 0) {
-                resetParking();
-            }
-        }, 60000);
+// Reset parking spots every day at 19:00
+setInterval(() => {
+    const now = new Date();
+    if (now.getHours() === 19 && now.getMinutes() === 0) {
+        resetParking();
+    }
+}, 60000);
+
+  
     </script>
 </body>
 </html>
