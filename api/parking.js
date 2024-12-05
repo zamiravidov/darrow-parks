@@ -1,34 +1,44 @@
 export default async function handler(req, res) {
-    // לקבל את המזהה של ה-Edge Config מהגדרות הסביבה
     const edgeConfigId = process.env.EDGE_CONFIG;
-    const baseUrl = `https://edge-config.vercel.com/ecfg-${edgeConfigId}`;
-    
+    const token = process.env.EDGE_CONFIG_TOKEN;
+    const baseUrl = `https://edge-config.vercel.com/ecfg_i1rcwr5ehpvndhu271wt3nrr7nck`;
+
     try {
-        // GET request - קבלת נתונים
         if (req.method === 'GET') {
-            const response = await fetch(`${baseUrl}/items/parking`, {
+            // קריאת נתונים מה-Edge Config
+            const response = await fetch(`${baseUrl}/item/parking`, {
                 headers: {
-                    'Authorization': `Bearer ${process.env.EDGE_CONFIG_TOKEN}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
             const data = await response.json();
             return res.json(data || { parkingSpots: [], waitingList: [] });
         }
-        
-        // POST request - שמירת נתונים
+
         if (req.method === 'POST') {
-            await fetch(`${baseUrl}/items/parking`, {
-                method: 'PUT',
+            // שמירת נתונים ב-Edge Config
+            const result = await fetch(`${baseUrl}/items`, {
+                method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${process.env.EDGE_CONFIG_TOKEN}`,
-                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(req.body)
+                body: JSON.stringify({
+                    items: {
+                        parking: req.body
+                    }
+                })
             });
+
+            if (!result.ok) {
+                throw new Error('Failed to save data');
+            }
+
             return res.json({ success: true });
         }
+
     } catch (error) {
         console.error('Error:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 }
