@@ -1,14 +1,9 @@
 export default async function handler(req, res) {
-    const edgeConfigId = process.env.EDGE_CONFIG;
-    const token = process.env.EDGE_CONFIG_TOKEN;
-    const baseUrl = `https://edge-config.vercel.com/ecfg_i1rcwr5ehpvndhu271wt3nrr7nck`;
-
     try {
         if (req.method === 'GET') {
-            // קריאת נתונים מה-Edge Config
-            const response = await fetch(`${baseUrl}/item/parking`, {
+            const response = await fetch('https://edge-config.vercel.com/items/parking', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${process.env.EDGE_CONFIG_TOKEN}`
                 }
             });
             const data = await response.json();
@@ -16,29 +11,20 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'POST') {
-            // שמירת נתונים ב-Edge Config
-            const result = await fetch(`${baseUrl}/items`, {
+            const result = await fetch('https://edge-config.vercel.com/items', {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${process.env.EDGE_CONFIG_TOKEN}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    items: {
-                        parking: req.body
-                    }
-                })
+                body: JSON.stringify(req.body)
             });
-
-            if (!result.ok) {
-                throw new Error('Failed to save data');
-            }
 
             return res.json({ success: true });
         }
 
     } catch (error) {
         console.error('Error:', error);
-        return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+        return res.status(500).json({ error: error.message });
     }
 }
