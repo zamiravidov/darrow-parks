@@ -153,6 +153,12 @@
 
         const waitingList = [];
 
+        function startPolling() {
+    setInterval(async () => {
+        await loadData();
+    }, 5000); 
+}
+
               // פונקציות חדשות לתקשורת עם השרת
 async function saveChanges() {
     try {
@@ -284,8 +290,9 @@ function addToWaitingList() {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    loadData();  // טעינת נתונים מהשרת
+    loadData();
     updateDate();
+    startPolling();
 });
 
 // Reset parking spots every day at 19:00
